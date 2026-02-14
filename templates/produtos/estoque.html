@@ -1,0 +1,166 @@
+{% extends "base.html" %}
+{% block title %}Controle de Estoque{% endblock %}
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-2">
+    <h4 class="mb-0">Controle de Estoque</h4>
+    <div class="d-flex gap-2">
+        <a href="{% url 'produtos:estoque_exportar_excel' %}" class="btn btn-success btn-sm"><i class="bi bi-file-earmark-excel me-1"></i>Exportar Excel</a>
+        <a href="{% url 'produtos:lista' %}" class="btn btn-outline-secondary btn-sm"><i class="bi bi-box-seam me-1"></i>Produtos</a>
+    </div>
+</div>
+
+<div class="row g-3 mb-4">
+    <div class="col-md-4">
+        <div class="card border-primary">
+            <div class="card-body py-2">
+                <small class="text-muted">Total de itens</small>
+                <h5 class="mb-0 text-primary">{{ produtos.count }}</h5>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card border-warning">
+            <div class="card-body py-2">
+                <small class="text-muted">Estoque zerado</small>
+                <h5 class="mb-0 text-warning" id="count-zerado">0</h5>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card border-success">
+            <div class="card-body py-2">
+                <small class="text-muted">Estoque OK</small>
+                <h5 class="mb-0 text-success" id="count-ok">0</h5>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="card">
+    <div class="card-header d-flex justify-content-between align-items-center">
+        <span>Produtos e estoque atual</span>
+        <div class="input-group input-group-sm" style="width: 220px;">
+            <span class="input-group-text"><i class="bi bi-search"></i></span>
+            <input type="text" class="form-control" id="busca-estoque" placeholder="Buscar produto...">
+        </div>
+    </div>
+    <div class="card-body p-0">
+        <div class="table-responsive">
+            <table class="table table-hover mb-0">
+                <thead>
+                    <tr>
+                        <th>Produto</th>
+                        <th>Estoque</th>
+                        <th>Unidade</th>
+                        <th class="text-end" style="width: 200px;">Ajustar</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for p in produtos %}
+                    <tr class="produto-row" data-nome="{{ p.nome|lower }}">
+                        <td>
+                            <a href="{% url 'produtos:editar' p.pk %}">{{ p.nome }}</a>
+                        </td>
+                        <td>
+                            {% if p.estoque_atual == 0 %}
+                            <span class="badge bg-danger estoque-status">Zerado</span>
+                            {% elif p.estoque_atual < 5 %}
+                            <span class="badge bg-warning estoque-status">Baixo</span>
+                            {% else %}
+                            <span class="badge bg-success estoque-status">OK</span>
+                            {% endif %}
+                            <strong>{{ p.estoque_atual }} {{ p.unidade }}</strong>
+                        </td>
+                        <td>{{ p.unidade }}</td>
+                        <td class="text-end">
+                            <div class="btn-group btn-group-sm">
+                                <button type="button" class="btn btn-outline-success" data-bs-toggle="modal" data-bs-target="#modalAjuste" data-pk="{{ p.pk }}" data-nome="{{ p.nome }}" data-tipo="entrada" title="Entrada">
+                                    <i class="bi bi-plus-lg"></i>
+                                </button>
+                                <button type="button" class="btn btn-outline-danger" data-bs-toggle="modal" data-bs-target="#modalAjuste" data-pk="{{ p.pk }}" data-nome="{{ p.nome }}" data-tipo="saida" title="Saída">
+                                    <i class="bi bi-dash-lg"></i>
+                                </button>
+                            </div>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr><td colspan="4" class="text-muted text-center py-4">Nenhum produto ativo.</td></tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="modalAjuste" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <form method="post" id="formAjuste" action="">
+                {% csrf_token %}
+                <input type="hidden" name="tipo" id="ajusteTipo">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="modalAjusteLabel">Ajustar estoque</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <p class="mb-2">Produto: <strong id="produtoNome"></strong></p>
+                    <p class="mb-3"><span id="tipoLabel"></span> de estoque</p>
+                    <div class="mb-3">
+                        <label class="form-label">Quantidade</label>
+                        <input type="text" name="quantidade" class="form-control" placeholder="Ex: 10" required>
+                    </div>
+                    <div class="mb-0">
+                        <label class="form-label">Motivo (opcional)</label>
+                        <input type="text" name="motivo" class="form-control" placeholder="Ex: Reposição, Perda, etc.">
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="submit" class="btn btn-primary">Confirmar</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+(function() {
+    const modal = document.getElementById('modalAjuste');
+    const form = document.getElementById('formAjuste');
+    if (modal) {
+        modal.addEventListener('show.bs.modal', function(e) {
+            const btn = e.relatedTarget;
+            const pk = btn.dataset.pk;
+            const nome = btn.dataset.nome;
+            const tipo = btn.dataset.tipo;
+            const isEntrada = tipo === 'entrada';
+            document.getElementById('ajusteTipo').value = tipo;
+            form.action = '{% url "produtos:estoque_ajustar" 0 %}'.replace('/0/', '/' + pk + '/');
+            document.getElementById('produtoNome').textContent = nome;
+            document.getElementById('tipoLabel').textContent = isEntrada ? 'Entrada' : 'Saída';
+        });
+    }
+
+    const busca = document.getElementById('busca-estoque');
+    if (busca) {
+        busca.addEventListener('input', function() {
+            const q = this.value.toLowerCase().trim();
+            document.querySelectorAll('.produto-row').forEach(function(row) {
+                const nome = row.dataset.nome || '';
+                const show = !q || nome.includes(q);
+                row.style.display = show ? '' : 'none';
+            });
+        });
+    }
+
+    const zerado = document.querySelectorAll('.estoque-status.bg-danger').length;
+    const ok = document.querySelectorAll('.estoque-status.bg-success').length;
+    const elZ = document.getElementById('count-zerado');
+    const elO = document.getElementById('count-ok');
+    if (elZ) elZ.textContent = zerado;
+    if (elO) elO.textContent = ok;
+})();
+</script>
+{% endblock %}

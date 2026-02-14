@@ -1,0 +1,297 @@
+{% extends "base.html" %}
+{% block title %}{{ titulo }}{% endblock %}
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h4 class="mb-0">{{ titulo }}</h4>
+    <a href="{% url 'produtos:lista' %}" class="btn btn-outline-secondary btn-sm"><i class="bi bi-arrow-left me-1"></i>Voltar</a>
+</div>
+<div class="card">
+    <div class="card-body">
+        <form method="post">
+            {% csrf_token %}
+            <div class="row g-3">
+                <div class="col-md-8">
+                    <label class="form-label">Nome</label>
+                    {{ form.nome }}
+                    {% if form.nome.errors %}<div class="invalid-feedback d-block">{{ form.nome.errors.0 }}</div>{% endif %}
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label">Código de barras</label>
+                    {{ form.codigo_barras }}
+                    {% if form.codigo_barras.errors %}<div class="invalid-feedback d-block">{{ form.codigo_barras.errors.0 }}</div>{% endif %}
+                </div>
+                <div class="col-12">
+                    <label class="form-label">Referência ao pedido</label>
+                    {{ form.referencia_pedido }}
+                    {% if form.referencia_pedido.errors %}<div class="invalid-feedback d-block">{{ form.referencia_pedido.errors.0 }}</div>{% endif %}
+                </div>
+                <div class="col-12">
+                    <label class="form-label">Referência ao cliente</label>
+                    {{ form.referencia_cliente }}
+                    {% if form.referencia_cliente.errors %}<div class="invalid-feedback d-block">{{ form.referencia_cliente.errors.0 }}</div>{% endif %}
+                </div>
+                <div class="col-12">
+                    <div class="card bg-light">
+                        <div class="card-body py-3">
+                            <h6 class="card-title mb-3">Cálculo de tecido</h6>
+                            <p class="text-muted small mb-3">Gramas/metro × Valor do tecido = Valor por peça</p>
+                            <div class="row g-3 align-items-end">
+                                <div class="col-md-4">
+                                    <label class="form-label">Gramas/metro (g)</label>
+                                    {{ form.gramas_por_metro }}
+                                    {% if form.gramas_por_metro.errors %}<div class="invalid-feedback d-block">{{ form.gramas_por_metro.errors.0 }}</div>{% endif %}
+                                </div>
+                                <div class="col-md-4">
+                                    <label class="form-label">Valor do tecido (R$)</label>
+                                    {{ form.valor_tecido }}
+                                    {% if form.valor_tecido.errors %}<div class="invalid-feedback d-block">{{ form.valor_tecido.errors.0 }}</div>{% endif %}
+                                </div>
+                                <div class="col-md-4">
+                                    <label class="form-label">Valor por peça</label>
+                                    <div class="form-control-plaintext fw-bold text-primary" id="valor-por-peca">R$ 0,00</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-12">
+                    <div class="card bg-light">
+                        <div class="card-body py-3">
+                            <h6 class="card-title mb-3">Cálculo de estamparia</h6>
+                            <p class="text-muted small mb-3">Quantidade × Valor unitário = Valor por peça</p>
+                            <div class="row g-3 align-items-end">
+                                <div class="col-md-4">
+                                    <label class="form-label">Quantidade</label>
+                                    {{ form.quantidade_estamparia }}
+                                    {% if form.quantidade_estamparia.errors %}<div class="invalid-feedback d-block">{{ form.quantidade_estamparia.errors.0 }}</div>{% endif %}
+                                </div>
+                                <div class="col-md-4">
+                                    <label class="form-label">Valor unitário (R$)</label>
+                                    {{ form.valor_unitario_estamparia }}
+                                    {% if form.valor_unitario_estamparia.errors %}<div class="invalid-feedback d-block">{{ form.valor_unitario_estamparia.errors.0 }}</div>{% endif %}
+                                </div>
+                                <div class="col-md-4">
+                                    <label class="form-label">Valor por peça</label>
+                                    <div class="form-control-plaintext fw-bold text-primary" id="valor-estamparia">R$ 0,00</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-12">
+                    <div class="card bg-light">
+                        <div class="card-body py-3">
+                            <h6 class="card-title mb-3">Cálculo de acabamento</h6>
+                            <p class="text-muted small mb-3">Quantidade × Valor unitário = Valor por peça</p>
+                            <div class="row g-3 align-items-end">
+                                <div class="col-md-4">
+                                    <label class="form-label">Quantidade</label>
+                                    {{ form.quantidade_acabamento }}
+                                    {% if form.quantidade_acabamento.errors %}<div class="invalid-feedback d-block">{{ form.quantidade_acabamento.errors.0 }}</div>{% endif %}
+                                </div>
+                                <div class="col-md-4">
+                                    <label class="form-label">Valor unitário (R$)</label>
+                                    {{ form.valor_unitario_acabamento }}
+                                    {% if form.valor_unitario_acabamento.errors %}<div class="invalid-feedback d-block">{{ form.valor_unitario_acabamento.errors.0 }}</div>{% endif %}
+                                </div>
+                                <div class="col-md-4">
+                                    <label class="form-label">Valor por peça</label>
+                                    <div class="form-control-plaintext fw-bold text-primary" id="valor-acabamento">R$ 0,00</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-12">
+                    <div class="card bg-light">
+                        <div class="card-body py-3">
+                            <h6 class="card-title mb-3">Cálculo de aviamentos</h6>
+                            <p class="text-muted small mb-3">Quantidade × Valor unitário = Valor por peça</p>
+                            <div class="row g-3 align-items-end">
+                                <div class="col-md-4">
+                                    <label class="form-label">Quantidade</label>
+                                    {{ form.quantidade_aviamentos }}
+                                    {% if form.quantidade_aviamentos.errors %}<div class="invalid-feedback d-block">{{ form.quantidade_aviamentos.errors.0 }}</div>{% endif %}
+                                </div>
+                                <div class="col-md-4">
+                                    <label class="form-label">Valor unitário (R$)</label>
+                                    {{ form.valor_unitario_aviamentos }}
+                                    {% if form.valor_unitario_aviamentos.errors %}<div class="invalid-feedback d-block">{{ form.valor_unitario_aviamentos.errors.0 }}</div>{% endif %}
+                                </div>
+                                <div class="col-md-4">
+                                    <label class="form-label">Valor por peça</label>
+                                    <div class="form-control-plaintext fw-bold text-primary" id="valor-aviamentos">R$ 0,00</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-12">
+                    <div class="card bg-light">
+                        <div class="card-body py-3">
+                            <h6 class="card-title mb-3">Cálculo de costura</h6>
+                            <p class="text-muted small mb-3">Quantidade × Valor unitário = Valor por peça</p>
+                            <div class="row g-3 align-items-end">
+                                <div class="col-md-4">
+                                    <label class="form-label">Quantidade</label>
+                                    {{ form.quantidade_costura }}
+                                    {% if form.quantidade_costura.errors %}<div class="invalid-feedback d-block">{{ form.quantidade_costura.errors.0 }}</div>{% endif %}
+                                </div>
+                                <div class="col-md-4">
+                                    <label class="form-label">Valor unitário (R$)</label>
+                                    {{ form.valor_unitario_costura }}
+                                    {% if form.valor_unitario_costura.errors %}<div class="invalid-feedback d-block">{{ form.valor_unitario_costura.errors.0 }}</div>{% endif %}
+                                </div>
+                                <div class="col-md-4">
+                                    <label class="form-label">Valor por peça</label>
+                                    <div class="form-control-plaintext fw-bold text-primary" id="valor-costura">R$ 0,00</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-12">
+                    <div class="card bg-light">
+                        <div class="card-body py-3">
+                            <h6 class="card-title mb-3">Outros</h6>
+                            <p class="text-muted small mb-3">Quantidade × Valor unitário = Valor por peça</p>
+                            <div class="row g-3 align-items-end">
+                                <div class="col-md-4">
+                                    <label class="form-label">Quantidade</label>
+                                    {{ form.quantidade_outros }}
+                                    {% if form.quantidade_outros.errors %}<div class="invalid-feedback d-block">{{ form.quantidade_outros.errors.0 }}</div>{% endif %}
+                                </div>
+                                <div class="col-md-4">
+                                    <label class="form-label">Valor unitário (R$)</label>
+                                    {{ form.valor_unitario_outros }}
+                                    {% if form.valor_unitario_outros.errors %}<div class="invalid-feedback d-block">{{ form.valor_unitario_outros.errors.0 }}</div>{% endif %}
+                                </div>
+                                <div class="col-md-4">
+                                    <label class="form-label">Valor por peça</label>
+                                    <div class="form-control-plaintext fw-bold text-primary" id="valor-outros">R$ 0,00</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-12">
+                    <div class="card border-primary">
+                        <div class="card-body py-3">
+                            <h6 class="card-title mb-3">Resumo</h6>
+                            <div class="row g-3 align-items-end">
+                                <div class="col-md-4">
+                                    <label class="form-label">Custo total</label>
+                                    <div class="form-control-plaintext fw-bold fs-5" id="custo-total">R$ 0,00</div>
+                                    <small class="text-muted">Soma de todos os cálculos acima</small>
+                                </div>
+                                <div class="col-md-4">
+                                    <label class="form-label">Valor de venda (R$)</label>
+                                    {{ form.preco_venda }}
+                                    {% if form.preco_venda.errors %}<div class="invalid-feedback d-block">{{ form.preco_venda.errors.0 }}</div>{% endif %}
+                                </div>
+                                <div class="col-md-4">
+                                    <label class="form-label">Lucro</label>
+                                    <div class="form-control-plaintext fw-bold fs-5" id="lucro">R$ 0,00</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-12">
+                    <div class="form-check">
+                        {{ form.ativo }}
+                        <label class="form-check-label" for="{{ form.ativo.id_for_label }}">Ativo</label>
+                    </div>
+                </div>
+            </div>
+            <hr class="my-4">
+            <button type="submit" class="btn btn-primary">Salvar</button>
+            <a href="{% url 'produtos:lista' %}" class="btn btn-outline-secondary">Cancelar</a>
+        </form>
+    </div>
+</div>
+{% endblock %}
+{% block extra_js %}
+<script>
+(function() {
+    function parseNum(val) {
+        if (val === '' || val == null) return NaN;
+        var s = String(val).trim().replace(',', '.');
+        return parseFloat(s) || NaN;
+    }
+    function formatBRL(n) {
+        return 'R$ ' + n.toFixed(2).replace('.', ',');
+    }
+    function getCustoTotal() {
+        var tecido = parseNum(document.getElementById('id_gramas_por_metro').value) * parseNum(document.getElementById('id_valor_tecido').value) || 0;
+        var est = parseNum(document.getElementById('id_quantidade_estamparia').value) * parseNum(document.getElementById('id_valor_unitario_estamparia').value) || 0;
+        var acab = parseNum(document.getElementById('id_quantidade_acabamento').value) * parseNum(document.getElementById('id_valor_unitario_acabamento').value) || 0;
+        var avi = parseNum(document.getElementById('id_quantidade_aviamentos').value) * parseNum(document.getElementById('id_valor_unitario_aviamentos').value) || 0;
+        var cost = parseNum(document.getElementById('id_quantidade_costura').value) * parseNum(document.getElementById('id_valor_unitario_costura').value) || 0;
+        var out = parseNum(document.getElementById('id_quantidade_outros').value) * parseNum(document.getElementById('id_valor_unitario_outros').value) || 0;
+        return tecido + est + acab + avi + cost + out;
+    }
+    function updateResumo() {
+        var custo = getCustoTotal();
+        var venda = parseNum(document.getElementById('id_preco_venda').value) || 0;
+        var lucroVal = venda - custo;
+        var elCusto = document.getElementById('custo-total');
+        var elLucro = document.getElementById('lucro');
+        if (elCusto) elCusto.textContent = formatBRL(custo);
+        if (elLucro) {
+            elLucro.textContent = formatBRL(lucroVal);
+            elLucro.className = 'form-control-plaintext fw-bold fs-5 ' + (lucroVal >= 0 ? 'text-success' : 'text-danger');
+        }
+    }
+    function bindCalc(idQtd, idValor, idResult) {
+        var elQtd = document.getElementById(idQtd);
+        var elValor = document.getElementById(idValor);
+        var elResult = document.getElementById(idResult);
+        if (!elQtd || !elValor || !elResult) return;
+        function update() {
+            var q = parseNum(elQtd.value);
+            var v = parseNum(elValor.value);
+            if (!isNaN(q) && !isNaN(v) && q >= 0 && v >= 0) {
+                elResult.textContent = formatBRL(q * v);
+            } else {
+                elResult.textContent = 'R$ 0,00';
+            }
+            updateResumo();
+        }
+        elQtd.addEventListener('input', update);
+        elValor.addEventListener('input', update);
+        elQtd.addEventListener('change', update);
+        elValor.addEventListener('change', update);
+        update();
+    }
+    // Tecido: gramas/metro × valor tecido
+    (function() {
+        var g = document.getElementById('id_gramas_por_metro');
+        var v = document.getElementById('id_valor_tecido');
+        var r = document.getElementById('valor-por-peca');
+        if (g && v && r) {
+            function up() {
+                var a = parseNum(g.value), b = parseNum(v.value);
+                if (!isNaN(a) && !isNaN(b) && a >= 0 && b >= 0) r.textContent = formatBRL(a * b);
+                else r.textContent = 'R$ 0,00';
+                updateResumo();
+            }
+            g.addEventListener('input', up); v.addEventListener('input', up);
+            g.addEventListener('change', up); v.addEventListener('change', up);
+            up();
+        }
+    })();
+    bindCalc('id_quantidade_estamparia', 'id_valor_unitario_estamparia', 'valor-estamparia');
+    bindCalc('id_quantidade_acabamento', 'id_valor_unitario_acabamento', 'valor-acabamento');
+    bindCalc('id_quantidade_aviamentos', 'id_valor_unitario_aviamentos', 'valor-aviamentos');
+    bindCalc('id_quantidade_costura', 'id_valor_unitario_costura', 'valor-costura');
+    bindCalc('id_quantidade_outros', 'id_valor_unitario_outros', 'valor-outros');
+    var elVenda = document.getElementById('id_preco_venda');
+    if (elVenda) {
+        elVenda.addEventListener('input', updateResumo);
+        elVenda.addEventListener('change', updateResumo);
+    }
+    updateResumo();
+})();
+</script>
+{% endblock %}

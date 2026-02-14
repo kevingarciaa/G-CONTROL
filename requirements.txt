@@ -1,0 +1,6 @@
+# GControl - Sistema de Gestão Comercial
+# Python 3.10+
+
+Django>=5.0,<6
+Pillow>=10.0.0
+openpyxl>=3.1.0

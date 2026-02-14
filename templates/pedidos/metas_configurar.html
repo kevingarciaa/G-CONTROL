@@ -1,0 +1,48 @@
+{% extends "base.html" %}
+{% block title %}Definir metas{% endblock %}
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h4 class="mb-0">Metas de valores</h4>
+    <a href="{% url 'pedidos:metas_dashboard' %}" class="btn btn-outline-secondary btn-sm"><i class="bi bi-arrow-left me-1"></i>Voltar ao dashboard de metas</a>
+</div>
+<div class="card">
+    <div class="card-body">
+        <p class="text-muted small mb-3">Defina as metas para acompanhar no dashboard. Escolha o período (mensal, 60 dias, etc.) para cada meta; o progresso será calculado com base nos pedidos do período.</p>
+        <form method="post">
+            {% csrf_token %}
+            <div class="row g-3">
+                <div class="col-md-6">
+                    <label class="form-label">{{ form.meta_receber.label }}</label>
+                    {{ form.meta_receber }}
+                    {% if form.meta_receber.errors %}<div class="invalid-feedback d-block">{{ form.meta_receber.errors.0 }}</div>{% endif %}
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label">{{ form.periodo_receber.label }}</label>
+                    {{ form.periodo_receber }}
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label">{{ form.meta_lucro.label }}</label>
+                    {{ form.meta_lucro }}
+                    {% if form.meta_lucro.errors %}<div class="invalid-feedback d-block">{{ form.meta_lucro.errors.0 }}</div>{% endif %}
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label">{{ form.periodo_lucro.label }}</label>
+                    {{ form.periodo_lucro }}
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label">{{ form.meta_producao.label }}</label>
+                    {{ form.meta_producao }}
+                    {% if form.meta_producao.errors %}<div class="invalid-feedback d-block">{{ form.meta_producao.errors.0 }}</div>{% endif %}
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label">{{ form.periodo_producao.label }}</label>
+                    {{ form.periodo_producao }}
+                </div>
+            </div>
+            <hr class="my-4">
+            <button type="submit" class="btn btn-primary">Salvar metas</button>
+            <a href="{% url 'pedidos:dashboard' %}" class="btn btn-outline-secondary">Cancelar</a>
+        </form>
+    </div>
+</div>
+{% endblock %}

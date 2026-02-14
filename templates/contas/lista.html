@@ -1,0 +1,91 @@
+{% extends "base.html" %}
+{% block title %}Contas a pagar{% endblock %}
+{% block content %}
+<div class="d-flex justify-content-between align-items-center flex-wrap gap-3 mb-4">
+    <h4 class="mb-0">Contas a pagar</h4>
+    <a href="{% url 'contas:criar' %}" class="btn btn-primary btn-sm"><i class="bi bi-plus-lg me-1"></i>Nova conta</a>
+</div>
+
+<div class="d-flex flex-wrap gap-2 align-items-center mb-3">
+    <form method="get" action="{% url 'contas:lista' %}" class="d-flex flex-wrap gap-2 align-items-center">
+        <input type="hidden" name="filtro" value="{{ filtro }}">
+        <input type="hidden" name="periodo" value="{{ periodo }}">
+        <div class="input-group" style="min-width: 340px;">
+            <span class="input-group-text"><i class="bi bi-search"></i></span>
+            <input type="text" name="q" class="form-control form-control-sm" placeholder="Buscar por descrição, fornecedor..." value="{{ busca }}">
+            <button type="submit" class="btn btn-outline-secondary btn-sm">Buscar</button>
+        </div>
+    </form>
+    <span class="text-muted small">Período (vencimento):</span>
+    <div class="btn-group btn-group-sm">
+        <a href="{% url 'contas:lista' %}{% if filtro %}?filtro={{ filtro }}{% endif %}" class="btn btn-sm {% if not periodo %}btn-outline-primary active{% else %}btn-outline-secondary{% endif %}">Todos</a>
+        <a href="{% url 'contas:lista' %}?periodo=7{% if filtro %}&filtro={{ filtro }}{% endif %}" class="btn btn-sm {% if periodo == '7' %}btn-outline-primary active{% else %}btn-outline-secondary{% endif %}">7 dias</a>
+        <a href="{% url 'contas:lista' %}?periodo=15{% if filtro %}&filtro={{ filtro }}{% endif %}" class="btn btn-sm {% if periodo == '15' %}btn-outline-primary active{% else %}btn-outline-secondary{% endif %}">15 dias</a>
+        <a href="{% url 'contas:lista' %}?periodo=30{% if filtro %}&filtro={{ filtro }}{% endif %}" class="btn btn-sm {% if periodo == '30' %}btn-outline-primary active{% else %}btn-outline-secondary{% endif %}">30 dias</a>
+        <a href="{% url 'contas:lista' %}?periodo=semana{% if filtro %}&filtro={{ filtro }}{% endif %}" class="btn btn-sm {% if periodo == 'semana' %}btn-outline-primary active{% else %}btn-outline-secondary{% endif %}">Esta semana</a>
+        <a href="{% url 'contas:lista' %}?periodo=mes{% if filtro %}&filtro={{ filtro }}{% endif %}" class="btn btn-sm {% if periodo == 'mes' %}btn-outline-primary active{% else %}btn-outline-secondary{% endif %}">Este mês</a>
+    </div>
+    <div class="btn-group btn-group-sm ms-2">
+        <a href="{% url 'contas:lista' %}{% if periodo %}?periodo={{ periodo }}{% endif %}" class="btn btn-sm {% if not filtro %}btn-primary{% else %}btn-outline-secondary{% endif %}">Todas</a>
+        <a href="{% url 'contas:lista' %}?filtro=pendente{% if periodo %}&periodo={{ periodo }}{% endif %}" class="btn btn-sm {% if filtro == 'pendente' %}btn-warning{% else %}btn-outline-secondary{% endif %}">Pendentes</a>
+        <a href="{% url 'contas:lista' %}?filtro=pago{% if periodo %}&periodo={{ periodo }}{% endif %}" class="btn btn-sm {% if filtro == 'pago' %}btn-success{% else %}btn-outline-secondary{% endif %}">Pagas</a>
+    </div>
+    <div class="ms-auto">
+        {% if periodo_label %}<span class="badge bg-secondary me-2">{{ periodo_label }}</span>{% endif %}
+        <span class="badge bg-warning text-dark">Total pendente: R$ {{ total_pendente|floatformat:2 }}</span>
+    </div>
+</div>
+
+<div class="card">
+    <div class="card-body p-0">
+        <div class="table-responsive">
+            <table class="table table-hover mb-0">
+                <thead>
+                    <tr>
+                        <th>Descrição</th>
+                        <th>Fornecedor</th>
+                        <th>Vencimento</th>
+                        <th class="text-end">Valor</th>
+                        <th>Status</th>
+                        <th class="text-end" style="width: 160px;">Ações</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for c in contas %}
+                    <tr class="{% if c.pago %}text-muted{% endif %}">
+                        <td>{{ c.descricao }}</td>
+                        <td>{{ c.fornecedor.nome|default:"—" }}</td>
+                        <td>{{ c.data_vencimento|date:"d/m/Y" }}</td>
+                        <td class="text-end">R$ {{ c.valor|floatformat:2 }}</td>
+                        <td>
+                            {% if c.pago %}
+                                <span class="badge bg-success">Pago</span>
+                                {% if c.data_pagamento %}<small class="text-muted">{{ c.data_pagamento|date:"d/m/Y" }}</small>{% endif %}
+                            {% else %}
+                                <span class="badge bg-warning text-dark">Pendente</span>
+                            {% endif %}
+                        </td>
+                        <td class="text-end">
+                            <a href="{% url 'contas:editar' c.pk %}" class="btn btn-sm btn-outline-primary" title="Editar"><i class="bi bi-pencil"></i></a>
+                            <form method="post" action="{% url 'contas:marcar_pago' c.pk %}" class="d-inline">
+                                {% csrf_token %}
+                                <button type="submit" class="btn btn-sm {% if c.pago %}btn-outline-secondary{% else %}btn-outline-success{% endif %}" title="{% if c.pago %}Marcar pendente{% else %}Marcar como pago{% endif %}">
+                                    <i class="bi bi-{% if c.pago %}arrow-counterclockwise{% else %}check-lg{% endif %}"></i>
+                                </button>
+                            </form>
+                            <a href="{% url 'contas:excluir' c.pk %}" class="btn btn-sm btn-outline-danger" title="Excluir"><i class="bi bi-trash"></i></a>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="6" class="text-muted text-center py-4">
+                            {% if busca %}Nenhuma conta encontrada para "{{ busca }}".{% elif periodo_label %}Nenhuma conta com vencimento em {{ periodo_label|lower }}.{% elif filtro %}Nenhuma conta {% if filtro == 'pago' %}paga{% else %}pendente{% endif %}.{% else %}Nenhuma conta a pagar. <a href="{% url 'contas:criar' %}">Cadastrar primeira conta</a>{% endif %}
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}

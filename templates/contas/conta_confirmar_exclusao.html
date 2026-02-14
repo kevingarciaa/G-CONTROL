@@ -1,0 +1,19 @@
+{% extends "base.html" %}
+{% block title %}Excluir conta{% endblock %}
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h4 class="mb-0">Excluir conta a pagar</h4>
+    <a href="{% url 'contas:lista' %}" class="btn btn-outline-secondary btn-sm"><i class="bi bi-arrow-left me-1"></i>Voltar</a>
+</div>
+<div class="card border-danger">
+    <div class="card-body">
+        <p class="mb-2">Deseja realmente excluir a conta abaixo?</p>
+        <p class="mb-0"><strong>{{ conta.descricao }}</strong> — R$ {{ conta.valor|floatformat:2 }} (venc. {{ conta.data_vencimento|date:"d/m/Y" }})</p>
+        <form method="post" class="mt-4">
+            {% csrf_token %}
+            <button type="submit" class="btn btn-danger">Excluir</button>
+            <a href="{% url 'contas:lista' %}" class="btn btn-outline-secondary">Cancelar</a>
+        </form>
+    </div>
+</div>
+{% endblock %}

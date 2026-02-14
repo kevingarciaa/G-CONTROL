@@ -1,0 +1,274 @@
+{% extends "base.html" %}
+{% load l10n %}
+{% block title %}{{ titulo }}{% endblock %}
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h4 class="mb-0">{{ titulo }}</h4>
+    <a href="{% url 'pedidos:pedidos_lista' %}" class="btn btn-outline-secondary btn-sm"><i class="bi bi-arrow-left me-1"></i>Voltar</a>
+</div>
+
+<div class="card mb-4">
+    <div class="card-body">
+        <form method="post" id="pedido-form" {% if pedido %}action="{% url 'pedidos:pedido_editar' pedido.pk %}"{% else %}action="{% url 'pedidos:pedido_criar' %}"{% endif %}>
+            {% csrf_token %}
+            <div class="row g-3">
+                <div class="col-md-6">
+                    <label class="form-label">Cliente</label>
+                    {{ form.cliente }}
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label">Status</label>
+                    {{ form.status }}
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label">Setor atual</label>
+                    {{ form.setor_atual }}
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label">Data do pedido</label>
+                    {{ form.data_pedido }}
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label">Previsão de entrega (Setor)</label>
+                    {{ form.data_prevista_entrega }}
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label">Previsão de entrega (Pedido completo)</label>
+                    {{ form.data_prevista_entrega_completo }}
+                </div>
+                {% if pedido and itens %}
+                <input type="hidden" name="valor_total" value="{{ pedido.valor_total|unlocalize }}">
+                <input type="hidden" name="valor_custo" value="{{ pedido.valor_custo|unlocalize }}">
+                {% elif itens_rascunho %}
+                <input type="hidden" name="valor_total" value="{{ total_rascunho_receber|unlocalize }}">
+                <input type="hidden" name="valor_custo" value="{{ total_rascunho_custo|unlocalize }}">
+                {% endif %}
+                <div class="col-md-6">
+                    <label class="form-label">Forma de pagamento</label>
+                    {{ form.forma_pagamento }}
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label">Prazo</label>
+                    {{ form.prazo }}
+                    <small class="text-muted">Pagamento ou entrega</small>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+
+<div class="d-flex gap-2 justify-content-end p-3" style="position: fixed; bottom: 0.25rem; right: 1rem; z-index: 1020;">
+    <a href="{% url 'pedidos:pedidos_lista' %}" class="btn btn-outline-secondary">Cancelar</a>
+    <button type="submit" form="pedido-form" class="btn btn-primary">Salvar pedido</button>
+</div>
+
+{% if pedido or titulo == 'Novo pedido' %}
+<div class="card">
+    <div class="card-header d-flex justify-content-between align-items-center">
+        <span>Produtos do pedido</span>
+    </div>
+    <div class="card-body">
+        {% if pedido %}
+        <form method="post" action="{% url 'pedidos:pedido_item_adicionar' pedido.pk %}" class="mb-4" id="form-adicionar-item">
+        {% else %}
+        <form method="post" action="{% url 'pedidos:pedido_rascunho_item_adicionar' %}" class="mb-4" id="form-adicionar-item">
+            {% comment %}Campos ocultos para preservar cabeçalho do pedido ao adicionar produto (preenchidos por JS no submit){% endcomment %}
+            <input type="hidden" name="cliente" id="rascunho_cliente" value="">
+            <input type="hidden" name="status" id="rascunho_status" value="">
+            <input type="hidden" name="setor_atual" id="rascunho_setor_atual" value="">
+            <input type="hidden" name="data_pedido" id="rascunho_data_pedido" value="">
+            <input type="hidden" name="data_prevista_entrega" id="rascunho_data_prevista_entrega" value="">
+            <input type="hidden" name="data_prevista_entrega_completo" id="rascunho_data_prevista_entrega_completo" value="">
+            <input type="hidden" name="forma_pagamento" id="rascunho_forma_pagamento" value="">
+            <input type="hidden" name="prazo" id="rascunho_prazo" value="">
+        {% endif %}
+            {% csrf_token %}
+            <div class="row g-2 align-items-end mb-2">
+                <div class="col-md-5">
+                    <label class="form-label small">Produto</label>
+                    <select name="produto_id" class="form-select form-select-sm" required>
+                        <option value="">Selecione um produto...</option>
+                        {% for p in produtos %}
+                        <option value="{{ p.pk }}">{{ p.nome }} – R$ {{ p.preco_venda|floatformat:2 }} ({{ p.unidade }})</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-md-2">
+                    <label class="form-label small">Quantidade</label>
+                    <input type="text" name="quantidade" class="form-control form-control-sm" value="1" placeholder="1" required>
+                </div>
+                <div class="col-md-auto">
+                    <button type="submit" class="btn btn-primary btn-sm"><i class="bi bi-plus-lg me-1"></i>Adicionar à tabela</button>
+                </div>
+            </div>
+            <div class="row g-2 mt-1">
+                <div class="col-12">
+                    <label class="form-label small d-block mb-1">Tamanhos para este item</label>
+                    <div class="d-flex flex-wrap gap-3">
+                        {% for titulo_cat, opcoes in tamanhos_por_categoria %}
+                        <div class="d-flex align-items-center flex-wrap gap-2">
+                            <span class="small text-secondary fw-bold">{{ titulo_cat }}:</span>
+                            {% for value, label in opcoes %}
+                            <div class="form-check form-check-inline mb-0">
+                                <input type="checkbox" name="tamanhos_item" value="{{ value }}" id="id_tamanhos_item_{{ value }}" class="form-check-input">
+                                <label class="form-check-label small" for="id_tamanhos_item_{{ value }}">{{ label }}</label>
+                            </div>
+                            {% endfor %}
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+        </form>
+
+        <div class="table-responsive">
+            <table class="table table-hover mb-0">
+                <thead>
+                    <tr>
+                        <th>Produto</th>
+                        <th>Tamanhos</th>
+                        <th class="text-end">Qtd</th>
+                        <th class="text-end">Preço unit.</th>
+                        <th class="text-end">Subtotal</th>
+                        <th class="text-end" style="width: 140px;">Ações</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for item in itens %}
+                    <tr>
+                        <td>{{ item.produto.nome }}</td>
+                        <td>{{ item.tamanhos|default:"—" }}</td>
+                        <td class="text-end">{{ item.quantidade }} {{ item.produto.unidade }}</td>
+                        <td class="text-end">R$ {{ item.preco_unitario|floatformat:2 }}</td>
+                        <td class="text-end">R$ {{ item.subtotal|floatformat:2 }}</td>
+                        <td class="text-end">
+                            <form method="post" action="{% url 'pedidos:pedido_item_alterar_qtd' pedido.pk item.pk %}" class="d-inline">
+                                {% csrf_token %}
+                                <div class="input-group input-group-sm" style="width: 100px;">
+                                    <input type="text" name="quantidade" class="form-control form-control-sm" value="{{ item.quantidade }}" placeholder="Qtd">
+                                    <button type="submit" class="btn btn-outline-secondary btn-sm" title="Atualizar"><i class="bi bi-check"></i></button>
+                                </div>
+                            </form>
+                            <form method="post" action="{% url 'pedidos:pedido_item_remover' pedido.pk item.pk %}" class="d-inline ms-1" onsubmit="return confirm('Remover este produto do pedido?');">
+                                {% csrf_token %}
+                                <button type="submit" class="btn btn-sm btn-outline-danger" title="Remover"><i class="bi bi-trash"></i></button>
+                            </form>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                    {% if not pedido %}
+                    {% for item in itens_rascunho %}
+                    <tr>
+                        <td>{{ item.produto_nome }}</td>
+                        <td>{{ item.tamanhos|default:"—" }}</td>
+                        <td class="text-end">{{ item.quantidade }} {{ item.produto_unidade }}</td>
+                        <td class="text-end">R$ {{ item.preco_unitario }}</td>
+                        <td class="text-end">R$ {{ item.subtotal }}</td>
+                        <td class="text-end">
+                            <form method="post" action="{% url 'pedidos:pedido_rascunho_item_remover' forloop.counter0 %}" class="d-inline" onsubmit="return confirm('Remover este produto do pedido?');">
+                                {% csrf_token %}
+                                <button type="submit" class="btn btn-sm btn-outline-danger" title="Remover"><i class="bi bi-trash"></i></button>
+                            </form>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                    {% endif %}
+                    {% if not itens and not itens_rascunho %}
+                    <tr>
+                        <td colspan="6" class="text-muted text-center py-4">
+                            Nenhum produto no pedido. Use o formulário acima para adicionar produtos cadastrados.
+                        </td>
+                    </tr>
+                    {% endif %}
+                </tbody>
+            </table>
+        </div>
+
+        <div class="border-top pt-3 mt-3">
+            <div class="row g-3">
+                {% if pedido and itens %}
+                <div class="col-md-4">
+                    <label class="form-label">Valor total (R$)</label>
+                    <input type="text" class="form-control" value="{{ pedido.valor_total|floatformat:2 }}" readonly>
+                    <small class="text-muted">Calculado pelos itens</small>
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label">Custo (R$)</label>
+                    <input type="text" class="form-control" value="{{ pedido.valor_custo|floatformat:2 }}" readonly>
+                </div>
+                {% elif itens_rascunho %}
+                <div class="col-md-4">
+                    <label class="form-label">Valor total (R$)</label>
+                    <input type="text" class="form-control" value="{{ total_rascunho_receber|floatformat:2 }}" readonly>
+                    <small class="text-muted">Soma dos produtos adicionados</small>
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label">Custo (R$)</label>
+                    <input type="text" class="form-control" value="{{ total_rascunho_custo|floatformat:2 }}" readonly>
+                </div>
+                {% else %}
+                <div class="col-md-4">
+                    <label class="form-label">Valor total (R$)</label>
+                    {{ form.valor_total }}
+                    {% if form.valor_total.errors %}<div class="invalid-feedback d-block">{{ form.valor_total.errors.0 }}</div>{% endif %}
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label">Custo (R$)</label>
+                    {{ form.valor_custo }}
+                </div>
+                {% endif %}
+            </div>
+        </div>
+
+    </div>
+</div>
+
+{% if itens or itens_rascunho %}
+<div class="mt-4 pb-5 text-start" style="padding-bottom: 4rem;">
+    <div class="border rounded p-3 bg-light d-inline-block">
+        {% if itens %}
+        <p class="mb-0"><strong>Faturamento:</strong> R$ {{ pedido.valor_total|floatformat:2 }}</p>
+        <p class="mb-0 text-muted"><strong>Custo total:</strong> R$ {{ pedido.valor_custo|floatformat:2 }}</p>
+        <p class="mb-0"><strong>Lucro:</strong> R$ {{ pedido.lucro|floatformat:2 }}</p>
+        {% elif itens_rascunho %}
+        <p class="mb-0"><strong>Faturamento:</strong> R$ {{ total_rascunho_receber|floatformat:2 }}</p>
+        <p class="mb-0 text-muted"><strong>Custo total:</strong> R$ {{ total_rascunho_custo|floatformat:2 }}</p>
+        <p class="mb-0"><strong>Lucro:</strong> R$ {{ total_rascunho_lucro|floatformat:2 }}</p>
+        <small class="text-muted">Clique em &quot;Salvar pedido&quot; para criar o pedido com estes produtos.</small>
+        {% endif %}
+    </div>
+</div>
+{% endif %}
+{% endif %}
+{% endblock %}
+
+{% block extra_js %}
+<script>
+(function() {
+    var formAdd = document.getElementById('form-adicionar-item');
+    var hiddenCliente = document.getElementById('rascunho_cliente');
+    if (!formAdd || !hiddenCliente) return;
+    var btn = formAdd.querySelector('button[type="submit"]');
+    if (!btn) return;
+    var idsOrigem = {
+        cliente: 'id_cliente',
+        status: 'id_status',
+        setor_atual: 'id_setor_atual',
+        data_pedido: 'id_data_pedido',
+        data_prevista_entrega: 'id_data_prevista_entrega',
+        data_prevista_entrega_completo: 'id_data_prevista_entrega_completo',
+        forma_pagamento: 'id_forma_pagamento',
+        prazo: 'id_prazo'
+    };
+    btn.addEventListener('click', function(ev) {
+        ev.preventDefault();
+        for (var name in idsOrigem) {
+            var el = document.getElementById(idsOrigem[name]);
+            var hidden = document.getElementById('rascunho_' + name);
+            if (el && hidden) hidden.value = el.value || '';
+        }
+        formAdd.submit();
+    });
+})();
+</script>
+{% endblock %}

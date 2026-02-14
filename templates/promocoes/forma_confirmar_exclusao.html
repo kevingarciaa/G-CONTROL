@@ -1,0 +1,18 @@
+{% extends "base.html" %}
+{% block title %}Excluir forma de pagamento{% endblock %}
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h4 class="mb-0">Excluir forma de pagamento</h4>
+    <a href="{% url 'promocoes:formas' %}" class="btn btn-outline-secondary btn-sm"><i class="bi bi-arrow-left me-1"></i>Voltar</a>
+</div>
+<div class="card border-danger">
+    <div class="card-body">
+        <p class="mb-0">Deseja realmente excluir a forma de pagamento <strong>{{ forma.nome }}</strong>?</p>
+        <form method="post" class="mt-4">
+            {% csrf_token %}
+            <button type="submit" class="btn btn-danger">Sim, excluir</button>
+            <a href="{% url 'promocoes:formas' %}" class="btn btn-outline-secondary">Cancelar</a>
+        </form>
+    </div>
+</div>
+{% endblock %}

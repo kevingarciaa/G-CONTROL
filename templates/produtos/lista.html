@@ -1,0 +1,107 @@
+{% extends "base.html" %}
+{% block title %}Produtos{% endblock %}
+{% block content %}
+<div class="d-flex align-items-center mb-4">
+    <div class="d-flex" style="flex: 1;">
+        <form method="get" action="{% url 'produtos:lista' %}" class="d-flex">
+            <div class="input-group">
+                <span class="input-group-text"><i class="bi bi-search"></i></span>
+                <input type="text" name="q" class="form-control" placeholder="Buscar por nome ou código..." value="{{ busca }}" style="min-width: 280px;">
+                <button type="submit" class="btn btn-outline-secondary">Buscar</button>
+            </div>
+        </form>
+    </div>
+    <div class="d-flex justify-content-center" style="flex: 1;"><h4 class="mb-0">Produtos</h4></div>
+    <div class="d-flex justify-content-end" style="flex: 1;">
+        <a href="{% url 'produtos:criar' %}" class="btn btn-primary btn-sm"><i class="bi bi-plus-lg me-1"></i>Novo produto</a>
+    </div>
+</div>
+
+<form method="post" action="{% url 'produtos:excluir_varios' %}" id="formExcluirVarios">
+    {% csrf_token %}
+    <div class="d-flex align-items-center gap-2 mb-3" id="barraAcoes" style="display: none;">
+        <span class="text-muted small" id="contadorSelecionados">0 selecionado(s)</span>
+        <button type="button" class="btn btn-outline-secondary btn-sm" id="btnDesmarcar">Desmarcar</button>
+        <button type="submit" class="btn btn-danger btn-sm" id="btnExcluirSelecionados" onclick="return confirm('Excluir os produtos selecionados? Esta ação não pode ser desfeita.');">
+            <i class="bi bi-trash me-1"></i>Excluir selecionados
+        </button>
+    </div>
+
+    <div class="card">
+        <div class="card-body p-0">
+            <table class="table table-hover mb-0">
+                <thead>
+                    <tr>
+                        <th style="width: 40px;">
+                            <input type="checkbox" class="form-check-input" id="selecionarTodos" title="Selecionar todos">
+                        </th>
+                        <th>Nome</th>
+                        <th>Cód. barras</th>
+                        <th>Preço</th>
+                        <th>Estoque</th>
+                        <th class="text-end" style="width: 120px;">Ações</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for p in produtos %}
+                    <tr>
+                        <td>
+                            <input type="checkbox" class="form-check-input checkbox-produto" name="ids" value="{{ p.pk }}" form="formExcluirVarios">
+                        </td>
+                        <td>{{ p.nome }}</td>
+                        <td>{{ p.codigo_barras|default:"—" }}</td>
+                        <td>R$ {{ p.preco_venda|floatformat:2 }}</td>
+                        <td>{{ p.estoque_atual }} {{ p.unidade }}</td>
+                        <td class="text-end">
+                            <a href="{% url 'produtos:editar' p.pk %}" class="btn btn-sm btn-outline-primary" title="Editar"><i class="bi bi-pencil"></i></a>
+                            <a href="{% url 'produtos:excluir' p.pk %}" class="btn btn-sm btn-outline-danger" title="Excluir"><i class="bi bi-trash"></i></a>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr><td colspan="6" class="text-muted text-center py-4">{% if busca %}Nenhum produto encontrado para "{{ busca }}".{% else %}Nenhum produto. <a href="{% url 'produtos:criar' %}">Cadastrar primeiro produto</a>{% endif %}</td></tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</form>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+(function() {
+    const selecionarTodos = document.getElementById('selecionarTodos');
+    const checkboxes = document.querySelectorAll('.checkbox-produto');
+    const barraAcoes = document.getElementById('barraAcoes');
+    const contador = document.getElementById('contadorSelecionados');
+    const btnDesmarcar = document.getElementById('btnDesmarcar');
+
+    function atualizarBarra() {
+        const n = document.querySelectorAll('.checkbox-produto:checked').length;
+        contador.textContent = n + ' selecionado(s)';
+        barraAcoes.style.display = n > 0 ? 'flex' : 'none';
+        selecionarTodos.checked = n > 0 && n === checkboxes.length;
+        selecionarTodos.indeterminate = n > 0 && n < checkboxes.length;
+    }
+
+    if (selecionarTodos) {
+        selecionarTodos.addEventListener('change', function() {
+            checkboxes.forEach(function(cb) { cb.checked = selecionarTodos.checked; });
+            atualizarBarra();
+        });
+    }
+    checkboxes.forEach(function(cb) {
+        cb.addEventListener('change', atualizarBarra);
+    });
+    if (btnDesmarcar) {
+        btnDesmarcar.addEventListener('click', function() {
+            checkboxes.forEach(function(cb) { cb.checked = false; });
+            selecionarTodos.checked = false;
+            selecionarTodos.indeterminate = false;
+            atualizarBarra();
+        });
+    }
+    atualizarBarra();
+})();
+</script>
+{% endblock %}

@@ -1,0 +1,97 @@
+{% extends "base.html" %}
+{% block title %}Pedidos{% endblock %}
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-2">
+    <h4 class="mb-0">Pedidos</h4>
+    <a href="{% url 'pedidos:pedido_criar' %}" class="btn btn-primary btn-sm"><i class="bi bi-plus-lg me-1"></i>Novo pedido</a>
+</div>
+
+<div class="mb-3">
+    <div class="btn-group btn-group-sm" role="group">
+        <a href="{% url 'pedidos:pedidos_lista' %}" class="btn {% if not status_filtro and not atraso_filtro %}btn-primary{% else %}btn-outline-primary{% endif %}">Todos</a>
+        <a href="{% url 'pedidos:pedidos_lista' %}?atraso=1" class="btn {% if atraso_filtro %}btn-danger{% else %}btn-outline-danger{% endif %}">Em atraso</a>
+        <a href="{% url 'pedidos:pedidos_lista' %}?status=RASCUNHO" class="btn {% if status_filtro == 'RASCUNHO' %}btn-primary{% else %}btn-outline-primary{% endif %}">Rascunho</a>
+        <a href="{% url 'pedidos:pedidos_lista' %}?status=EM_PRODUCAO" class="btn {% if status_filtro == 'EM_PRODUCAO' %}btn-primary{% else %}btn-outline-primary{% endif %}">Em produção</a>
+        <a href="{% url 'pedidos:pedidos_lista' %}?status=ENTREGUE" class="btn {% if status_filtro == 'ENTREGUE' %}btn-primary{% else %}btn-outline-primary{% endif %}">Entregue</a>
+        <a href="{% url 'pedidos:pedidos_lista' %}?status=CANCELADO" class="btn {% if status_filtro == 'CANCELADO' %}btn-primary{% else %}btn-outline-primary{% endif %}">Cancelado</a>
+    </div>
+</div>
+
+{% if atraso_filtro %}
+<div class="alert alert-danger py-2 mb-3">
+    <i class="bi bi-exclamation-triangle me-2"></i>Exibindo pedidos em atraso (por setor e/ou pedido completo).
+</div>
+{% endif %}
+<div class="card">
+    <div class="card-body p-0">
+        <div class="table-responsive">
+            <table class="table table-hover mb-0">
+                <thead>
+                    <tr>
+                        <th>#</th>
+                        <th>Cliente</th>
+                        <th>Status</th>
+                        <th>Setor</th>
+                        <th>Pedido</th>
+                        <th>Previsão setor</th>
+                        <th>Previsão completo</th>
+                        <th>Total</th>
+                        <th>Custo</th>
+                        <th>Lucro</th>
+                        <th class="text-end" style="width: 100px;">Ações</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for p in pedidos %}
+                    <tr role="button" tabindex="0" class="pedido-row" style="cursor: pointer;" data-href="{% url 'pedidos:pedido_acompanhar' p.pk %}">
+                        <td>{{ p.numero }}</td>
+                        <td>{{ p.cliente.nome|default:"—" }}</td>
+                        <td>
+                            {% if p.status == 'EM_PRODUCAO' %}<span class="badge bg-primary">Em produção</span>
+                            {% elif p.status == 'ENTREGUE' %}<span class="badge bg-success">Entregue</span>
+                            {% elif p.status == 'CANCELADO' %}<span class="badge bg-secondary">Cancelado</span>
+                            {% else %}<span class="badge bg-light text-dark">Rascunho</span>{% endif %}
+                            {% if p.em_atraso %}<span class="badge bg-danger ms-1">Atraso</span>{% endif %}
+                        </td>
+                        <td>{% if p.setor_atual %}{{ p.setor_atual.nome }}{% else %}—{% endif %}</td>
+                        <td>{{ p.data_pedido|date:"d/m/Y" }}</td>
+                        <td>{% if p.data_prevista_entrega %}{{ p.data_prevista_entrega|date:"d/m/Y" }}{% else %}—{% endif %}</td>
+                        <td>{% if p.data_prevista_entrega_completo %}{{ p.data_prevista_entrega_completo|date:"d/m/Y" }}{% else %}—{% endif %}</td>
+                        <td>R$ {{ p.valor_total|floatformat:2 }}</td>
+                        <td>R$ {{ p.valor_custo|floatformat:2 }}</td>
+                        <td>R$ {{ p.lucro|floatformat:2 }}</td>
+                        <td class="text-end" onclick="event.stopPropagation()">
+                            <a href="{% url 'pedidos:pedido_acompanhar' p.pk %}" class="btn btn-sm btn-outline-primary" title="Acompanhar"><i class="bi bi-eye"></i></a>
+                            <form method="post" action="{% url 'pedidos:pedido_excluir' p.pk %}" class="d-inline ms-1" onsubmit="return confirm('Excluir o pedido #{{ p.numero }}?');">
+                                {% csrf_token %}
+                                <button type="submit" class="btn btn-sm btn-outline-danger" title="Excluir"><i class="bi bi-trash"></i></button>
+                            </form>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr><td colspan="11" class="text-muted text-center py-4">Nenhum pedido. <a href="{% url 'pedidos:pedido_criar' %}">Criar primeiro pedido</a></td></tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% block extra_js %}
+<script>
+document.querySelectorAll('.pedido-row').forEach(function(row) {
+    row.addEventListener('click', function(e) {
+        if (e.target.closest('a, button, [type="submit"], form')) return;
+        var href = row.getAttribute('data-href');
+        if (href) window.location.href = href;
+    });
+    row.addEventListener('keydown', function(e) {
+        if (e.key === 'Enter' || e.key === ' ') {
+            e.preventDefault();
+            var href = row.getAttribute('data-href');
+            if (href) window.location.href = href;
+        }
+    });
+});
+</script>
+{% endblock %}
+{% endblock %}

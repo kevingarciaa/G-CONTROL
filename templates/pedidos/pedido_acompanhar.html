@@ -1,0 +1,92 @@
+{% extends "base.html" %}
+{% block title %}Pedido #{{ pedido.numero }}{% endblock %}
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-2">
+    <h4 class="mb-0">Pedido #{{ pedido.numero }}</h4>
+    <div class="d-flex gap-2">
+        <a href="{% url 'pedidos:pedido_editar' pedido.pk %}" class="btn btn-outline-primary btn-sm"><i class="bi bi-pencil me-1"></i>Editar pedido completo</a>
+        <a href="{% url 'pedidos:pedidos_lista' %}" class="btn btn-outline-secondary btn-sm"><i class="bi bi-arrow-left me-1"></i>Voltar</a>
+    </div>
+</div>
+
+<div class="row g-4">
+    <div class="col-lg-5">
+        <div class="card h-100">
+            <div class="card-header">Resumo do pedido</div>
+            <div class="card-body">
+                <p class="mb-2"><strong>Cliente:</strong> {{ pedido.cliente.nome|default:"—" }}</p>
+                <p class="mb-2"><strong>Data do pedido:</strong> {{ pedido.data_pedido|date:"d/m/Y" }}</p>
+                <p class="mb-2"><strong>Previsão de entrega:</strong> {% if pedido.data_prevista_entrega %}{{ pedido.data_prevista_entrega|date:"d/m/Y" }}{% else %}—{% endif %}</p>
+                <p class="mb-2"><strong>Total:</strong> R$ {{ pedido.valor_total|floatformat:2 }}</p>
+                <p class="mb-2"><strong>Custo:</strong> R$ {{ pedido.valor_custo|floatformat:2 }}</p>
+                <p class="mb-3"><strong>Lucro:</strong> R$ {{ pedido.lucro|floatformat:2 }}</p>
+                <hr class="my-3">
+                <p class="mb-2"><strong>Produção:</strong></p>
+                {% if pedido.itens.all %}
+                <ul class="list-unstyled small mb-2">
+                    {% for item in pedido.itens.all %}
+                    <li class="mb-1">
+                        {{ item.produto.nome }} — {{ item.quantidade|floatformat:0 }} {{ item.produto.unidade }}{% if item.tamanhos %} ({{ item.tamanhos }}){% endif %}
+                    </li>
+                    {% endfor %}
+                </ul>
+                <p class="mb-0 text-muted small"><strong>Total:</strong> {{ pedido.total_pecas }} peça(s)</p>
+                {% else %}
+                <p class="mb-0 text-muted small">Nenhum item no pedido.</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+    <div class="col-lg-7">
+        <div class="card mb-4">
+            <div class="card-header">Alterar setor</div>
+            <div class="card-body">
+                <p class="text-muted small mb-3">Setor atual: <strong>{% if pedido.setor_atual %}{{ pedido.setor_atual.nome }}{% else %}Nenhum{% endif %}</strong></p>
+                <form method="post" action="{% url 'pedidos:pedido_mover_setor' pedido.pk %}?next=acompanhar" class="row g-2 align-items-end">
+                    {% csrf_token %}
+                    <input type="hidden" name="next" value="acompanhar">
+                    <div class="col-md-6">
+                        <label class="form-label small">Mover para o setor</label>
+                        <select name="setor_id" class="form-select" required>
+                            <option value="">Selecione o setor...</option>
+                            {% for s in setores %}
+                            <option value="{{ s.pk }}" {% if pedido.setor_atual_id == s.pk %}selected{% endif %}>{{ s.nome }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="col-md-auto">
+                        <button type="submit" class="btn btn-primary"><i class="bi bi-arrow-right-circle me-1"></i>Mover para este setor</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <div class="card">
+            <div class="card-header">Alterar status do pedido</div>
+            <div class="card-body">
+                <p class="text-muted small mb-3">
+                    Status atual:
+                    {% if pedido.status == 'EM_PRODUCAO' %}<span class="badge bg-primary">Em produção</span>
+                    {% elif pedido.status == 'ENTREGUE' %}<span class="badge bg-success">Entregue</span>
+                    {% elif pedido.status == 'CANCELADO' %}<span class="badge bg-secondary">Cancelado</span>
+                    {% else %}<span class="badge bg-light text-dark">Rascunho</span>{% endif %}
+                </p>
+                <form method="post" action="{% url 'pedidos:pedido_acompanhar' pedido.pk %}" class="row g-2 align-items-end">
+                    {% csrf_token %}
+                    <div class="col-md-6">
+                        <label class="form-label small">Novo status</label>
+                        <select name="status" class="form-select" required>
+                            {% for value, label in status_choices %}
+                            <option value="{{ value }}" {% if pedido.status == value %}selected{% endif %}>{{ label }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="col-md-auto">
+                        <button type="submit" class="btn btn-primary"><i class="bi bi-check-lg me-1"></i>Atualizar status</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

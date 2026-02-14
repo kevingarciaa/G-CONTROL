@@ -1,0 +1,18 @@
+{% extends "base.html" %}
+{% block title %}Excluir produto{% endblock %}
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h4 class="mb-0">Excluir produto</h4>
+    <a href="{% url 'produtos:lista' %}" class="btn btn-outline-secondary btn-sm"><i class="bi bi-arrow-left me-1"></i>Voltar</a>
+</div>
+<div class="card border-danger">
+    <div class="card-body">
+        <p class="mb-0">Deseja realmente excluir o produto <strong>{{ produto.nome }}</strong>? Esta ação não pode ser desfeita.</p>
+        <form method="post" class="mt-4">
+            {% csrf_token %}
+            <button type="submit" class="btn btn-danger">Sim, excluir</button>
+            <a href="{% url 'produtos:lista' %}" class="btn btn-outline-secondary">Cancelar</a>
+        </form>
+    </div>
+</div>
+{% endblock %}

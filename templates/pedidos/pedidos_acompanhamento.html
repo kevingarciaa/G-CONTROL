@@ -1,0 +1,102 @@
+{% extends "base.html" %}
+{% block title %}Acompanhamento de Pedidos{% endblock %}
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-2">
+    <h4 class="mb-0">Acompanhamento de Pedidos</h4>
+    <a href="{% url 'pedidos:pedidos_lista' %}" class="btn btn-outline-secondary btn-sm"><i class="bi bi-list-ul me-1"></i>Ver lista completa</a>
+</div>
+
+<p class="text-muted mb-4">Visualize os pedidos por status. Clique em um pedido para alterar setor ou status.</p>
+
+<div class="row g-4">
+    <div class="col-md-6 col-lg-3">
+        <div class="card h-100 border-primary border-2">
+            <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
+                <span>Rascunho</span>
+                <span class="badge bg-light text-primary">{{ pedidos_rascunho|length }}</span>
+            </div>
+            <div class="card-body p-2">
+                {% for p in pedidos_rascunho %}
+                <a href="{% url 'pedidos:pedido_acompanhar' p.pk %}" class="d-block p-2 rounded text-decoration-none text-dark hover-bg-light border-bottom border-light">
+                    <div class="d-flex justify-content-between align-items-start">
+                        <span class="fw-bold">#{{ p.numero }}</span>
+                        <small class="text-muted">R$ {{ p.valor_total|floatformat:2 }}</small>
+                    </div>
+                    <small class="text-muted">{{ p.cliente.nome|default:"Sem cliente"|truncatewords:4 }}</small>
+                </a>
+                {% empty %}
+                <p class="text-muted small mb-0 p-2">Nenhum pedido em rascunho.</p>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+    <div class="col-md-6 col-lg-3">
+        <div class="card h-100 border-primary border-2">
+            <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
+                <span>Em produção</span>
+                <span class="badge bg-light text-primary">{{ pedidos_em_producao|length }}</span>
+            </div>
+            <div class="card-body p-2">
+                {% for p in pedidos_em_producao %}
+                <a href="{% url 'pedidos:pedido_acompanhar' p.pk %}" class="d-block p-2 rounded text-decoration-none text-dark hover-bg-light border-bottom border-light">
+                    <div class="d-flex justify-content-between align-items-start">
+                        <span class="fw-bold">#{{ p.numero }}</span>
+                        <small class="text-muted">R$ {{ p.valor_total|floatformat:2 }}</small>
+                    </div>
+                    <small class="text-muted">{{ p.cliente.nome|default:"Sem cliente"|truncatewords:4 }}</small>
+                    {% if p.setor_atual %}<div class="small mt-1"><span class="badge bg-secondary">{{ p.setor_atual.nome }}</span></div>{% endif %}
+                </a>
+                {% empty %}
+                <p class="text-muted small mb-0 p-2">Nenhum pedido em produção.</p>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+    <div class="col-md-6 col-lg-3">
+        <div class="card h-100 border-success border-2">
+            <div class="card-header bg-success text-white d-flex justify-content-between align-items-center">
+                <span>Entregue</span>
+                <span class="badge bg-light text-success">{{ pedidos_entregues|length }}</span>
+            </div>
+            <div class="card-body p-2">
+                {% for p in pedidos_entregues %}
+                <a href="{% url 'pedidos:pedido_acompanhar' p.pk %}" class="d-block p-2 rounded text-decoration-none text-dark hover-bg-light border-bottom border-light">
+                    <div class="d-flex justify-content-between align-items-start">
+                        <span class="fw-bold">#{{ p.numero }}</span>
+                        <small class="text-muted">R$ {{ p.valor_total|floatformat:2 }}</small>
+                    </div>
+                    <small class="text-muted">{{ p.cliente.nome|default:"Sem cliente"|truncatewords:4 }}</small>
+                </a>
+                {% empty %}
+                <p class="text-muted small mb-0 p-2">Nenhum pedido entregue.</p>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+    <div class="col-md-6 col-lg-3">
+        <div class="card h-100 border-secondary border-2">
+            <div class="card-header bg-secondary text-white d-flex justify-content-between align-items-center">
+                <span>Cancelado</span>
+                <span class="badge bg-light text-secondary">{{ pedidos_cancelados|length }}</span>
+            </div>
+            <div class="card-body p-2">
+                {% for p in pedidos_cancelados %}
+                <a href="{% url 'pedidos:pedido_acompanhar' p.pk %}" class="d-block p-2 rounded text-decoration-none text-dark hover-bg-light border-bottom border-light">
+                    <div class="d-flex justify-content-between align-items-start">
+                        <span class="fw-bold">#{{ p.numero }}</span>
+                        <small class="text-muted">R$ {{ p.valor_total|floatformat:2 }}</small>
+                    </div>
+                    <small class="text-muted">{{ p.cliente.nome|default:"Sem cliente"|truncatewords:4 }}</small>
+                </a>
+                {% empty %}
+                <p class="text-muted small mb-0 p-2">Nenhum pedido cancelado.</p>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+.hover-bg-light:hover { background-color: rgba(99, 102, 241, 0.08); }
+</style>
+{% endblock %}

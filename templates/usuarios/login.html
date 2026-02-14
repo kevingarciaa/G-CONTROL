@@ -1,0 +1,29 @@
+{% extends "base.html" %}
+{% block title %}Entrar{% endblock %}
+{% block content %}
+<div class="min-vh-100 d-flex align-items-center justify-content-center" style="background: linear-gradient(135deg, #eef2ff 0%, #e0e7ff 50%, #c7d2fe 100%);">
+    <div class="card shadow" style="width: 380px; border: none; border-radius: 16px; overflow: hidden; box-shadow: 0 10px 40px rgba(99, 102, 241, 0.15);">
+        <div class="card-body p-4" style="background: #fff;">
+            <div class="text-center mb-4">
+                <h4 class="card-title mb-1" style="color: #1e1b4b; font-weight: 700;">GControl</h4>
+                <p class="text-muted small mb-0">Sistema de Gestão Comercial</p>
+            </div>
+            <form method="post" action="{% url 'login' %}">
+                {% csrf_token %}
+                {% if form.non_field_errors %}
+                <div class="alert alert-danger">{{ form.non_field_errors }}</div>
+                {% endif %}
+                <div class="mb-3">
+                    <label class="form-label fw-medium" style="color: #4338ca;">Usuário</label>
+                    {{ form.username }}
+                </div>
+                <div class="mb-4">
+                    <label class="form-label fw-medium" style="color: #4338ca;">Senha</label>
+                    {{ form.password }}
+                </div>
+                <button type="submit" class="btn btn-primary w-100 py-2 fw-medium" style="border-radius: 10px;">Entrar</button>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}
