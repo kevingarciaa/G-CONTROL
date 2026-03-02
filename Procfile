@@ -1,1 +1,1 @@
-web: gunicorn gcontrol.wsgi
+web: gunicorn gcontrol.wsgi:application
