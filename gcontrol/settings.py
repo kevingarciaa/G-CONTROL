@@ -10,7 +10,12 @@ SECRET_KEY = os.environ.get('DJANGO_SECRET_KEY', 'dev-change-in-production-gcont
 
 DEBUG = os.environ.get('DEBUG', 'True').lower() in ('true', '1', 'yes')
 
-ALLOWED_HOSTS = ['localhost', '127.0.0.1']
+ALLOWED_HOSTS = [
+    'localhost',
+    '127.0.0.1',
+    'g-control.onrender.com',
+    '.onrender.com',  # qualquer subdomínio *.onrender.com
+]
 
 INSTALLED_APPS = [
     'django.contrib.admin',
