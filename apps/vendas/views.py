@@ -298,18 +298,6 @@ def dashboard(request):
         chart_formas_labels.append(nome)
         chart_formas_valores.append(float(v['total']))
 
-    # Dados mocados para visualização quando não há vendas no período
-    if not chart_vendas_dia_labels:
-        dias_periodo = (data_fim - data_inicio).days + 1
-        chart_vendas_dia_labels = [
-            (data_inicio + timedelta(days=d)).strftime('%d/%m')
-            for d in range(min(dias_periodo, 31))
-        ]
-        chart_vendas_dia_valores = [450.00, 820.50, 310.00, 1250.75, 680.00, 920.30, 410.00, 1560.00, 735.20, 890.00][:len(chart_vendas_dia_labels)]
-    if not chart_formas_labels:
-        chart_formas_labels = ['PIX', 'Dinheiro', 'Cartão Crédito', 'Cartão Débito']
-        chart_formas_valores = [3850.50, 2120.00, 1580.75, 980.00]
-
     # Dados para visualização de estoque
     produtos_ativos = Produto.objects.filter(empresa=empresa, ativo=True)
     estoque_zerado = produtos_ativos.filter(estoque_atual=0).count()
@@ -327,9 +315,6 @@ def dashboard(request):
     )
     chart_estoque_cat_labels = [v['categoria__nome'] for v in estoque_por_cat]
     chart_estoque_cat_valores = [float(v['total']) for v in estoque_por_cat]
-    if not chart_estoque_cat_labels:
-        chart_estoque_cat_labels = ['Tecidos por Metro', 'Rolos']
-        chart_estoque_cat_valores = [280.0, 55.0]
 
     context = {
         'total_mes': total_mes,

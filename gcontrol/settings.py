@@ -78,7 +78,7 @@ AUTH_PASSWORD_VALIDATORS = [
 AUTH_USER_MODEL = 'usuarios.Usuario'
 
 LOGIN_URL = '/login/'
-LOGIN_REDIRECT_URL = '/'
+LOGIN_REDIRECT_URL = '/dashboard/'
 LOGOUT_REDIRECT_URL = '/login/'
 
 LANGUAGE_CODE = 'pt-br'
