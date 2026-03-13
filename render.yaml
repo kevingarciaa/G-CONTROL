@@ -1,0 +1,9 @@
+# Render Blueprint - GControl
+# https://render.com/docs/blueprint-spec
+
+services:
+  - type: web
+    name: g-control
+    env: python
+    buildCommand: pip install -r requirements.txt && python manage.py migrate --noinput && python manage.py collectstatic --noinput
+    startCommand: gunicorn gcontrol.wsgi:application
