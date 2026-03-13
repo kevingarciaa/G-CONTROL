@@ -7,9 +7,8 @@ from pathlib import Path
 import dj_database_url
 from dotenv import load_dotenv
 
-load_dotenv()
-
 BASE_DIR = Path(__file__).resolve().parent.parent
+load_dotenv(BASE_DIR / '.env')
 
 SECRET_KEY = os.environ.get('DJANGO_SECRET_KEY', 'dev-change-in-production-gcontrol-kevin')
 
@@ -74,7 +73,11 @@ WSGI_APPLICATION = 'gcontrol.wsgi.application'
 
 # SQLite local | PostgreSQL em produção (DATABASE_URL, ex: Render)
 if os.environ.get('DATABASE_URL'):
-    DATABASES = {'default': dj_database_url.config(conn_max_age=600, conn_health_checks=True)}
+    db_config = dj_database_url.config(conn_max_age=600, conn_health_checks=True)
+    # SSL para Render PostgreSQL (conexões externas)
+    if db_config.get('ENGINE') == 'django.db.backends.postgresql':
+        db_config.setdefault('OPTIONS', {})['sslmode'] = 'require'
+    DATABASES = {'default': db_config}
 else:
     DATABASES = {
         'default': {
